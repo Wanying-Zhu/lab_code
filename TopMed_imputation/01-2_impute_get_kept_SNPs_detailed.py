@@ -9,7 +9,7 @@ import pandas as pd
 
 # ----------------------- Helper functions -----------------------
 # This function reads in a file with one snp in each line
-# (duplication of the same function in 02_impute_merge_files.py)
+# (duplication of the same function in merge_files_orig.py)
 # then return a list of all SNPs.
 # For this version, the first header line 'SNP' need to be skipped
 def get_snp_lst(snp_fn):
