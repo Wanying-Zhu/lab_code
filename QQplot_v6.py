@@ -1,4 +1,7 @@
 # Notes: changed calculation of expected p values according to Anna's code
+# (2021/04/14) Modified line 65, 66 use Pobsv[Pobsv!=0],
+#       so that np.log10 does not return warning message on p values of 0
+
 from scipy.stats import chi2
 from scipy.stats import beta
 import numpy as np
@@ -31,7 +34,6 @@ def __read_file(filename):
         except pd.errors.ParserError: pass
 #             print('Try 2 catched')
 #         File format maybe wrong if both read_csv failed
-
     else:
         df = pd.read_csv(filename)
     
@@ -59,10 +61,10 @@ def __log_obsv_and_expt(df, column_title):
         # From Anna's code, she used this one to calculate chi-squared test statistics, but not for logP qq plot
 #         Pexpt = chi2.ppf(np.arange(1, len(Pobsv) + 1, 1) / (len(Pobsv) + 1), df=1)
 
-    ln_Pexpt = 2*np.cumsum(1/np.arange(len(Pobsv), 0, -1)) # -2*ln(Pexpt), from Anna's code, don't understand why
-    logPobsv = -np.log10(Pobsv)
+    # Use Pobsv[Pobsv!=0] since log will not work on zeros (avoid warning message)
+    ln_Pexpt = 2*np.cumsum(1/np.arange(len(Pobsv[Pobsv!=0]), 0, -1)) # -2*ln(Pexpt), from Anna's code, don't understand why
+    logPobsv = -np.log10(Pobsv[Pobsv!=0])
     logPexpt = ln_Pexpt * scale # Convert from -2ln(x) to -log(x). from Anna's code
-    
     return(Pobsv, np.sort(logPobsv), logPexpt)
 
 
@@ -93,7 +95,7 @@ def __plot_ci(ax, ci, logPexpt):
     plt.fill_between(x=logPexpt, y1=lower_bond*scale, y2=upper_bond*scale,
                      alpha=0.2, color='k', linewidth=0, zorder=0) # Plot at the bottom
 
-    
+
 # The tricky part for me is to query haploreg database thorugh their website.
 # Inspecct the element of the website to find out names of each variable
 # Recommand using Chrome, go to developer mode, refresh the website under Network tab
@@ -126,17 +128,17 @@ def query_haploreg(input_snp,
                       'cons': cons,
                       'genetypes': genetypes,
                       'output':'text'}
-    
+
     # parameters passed to the website, needs to be parsed and in binary
     params = urllib.parse.urlencode(params_library).encode("utf-8")
     # url of HaploReg4.1
     url = 'https://pubs.broadinstitute.org/mammals/haploreg/haploreg.php'
     # Query with parameters
     query = urllib.request.urlopen(url, params)
-    
+
     # Keep console running
     print('-- Waiting for HaploReg to return results...')
-    
+
     content = query.read().decode("utf-8")
     # Find accociated SNPs in the content returned from HaploReg
     matches = re.findall('rs[0-9]+', content)
@@ -216,7 +218,7 @@ def __remove_known_SNPs(original_df, known_SNPs,all_SNPs_column_title='SNP',
 # - plot_ci: plot shaded area of confidence interval if true
 # - ci: confidence interval, default is 0.95
 #
-# Returns: (fig, ax, lambda)
+# Returns: (fig, ax, lambda_original, lambda_novel)
 # - fig and ax for more custermizations
 def qqplot(filename,
            output='output.png',
@@ -276,8 +278,8 @@ def qqplot(filename,
                 ax.plot(logPexpt_novel, logPobsv_novel, linestyle='', marker='o', markersize=2, markeredgewidth=0.5,
                         fillstyle='none', color='g', zorder=1)
                 
-                annotation = "λ (novel) = " + str("{0:.4f}".format(infl_novel))
-                ax.annotate(annotation, xy=(0.7, 0.1), xycoords='axes fraction')
+#                 annotation = "λ (novel) = " + str("{0:.4f}".format(infl_novel))
+#                 ax.annotate(annotation, xy=(0.7, 0.1), xycoords='axes fraction')
         else: print('No file of known SNPs provided\nOnly plot original SNPs')
     
 
