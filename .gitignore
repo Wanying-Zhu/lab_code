@@ -1,4 +1,6 @@
 # WZ's costomized files
+__pycache__/
+.ipynb_checkpoints/
 LocusZoom/
 TopMed_imputation/
 peer_python3/
