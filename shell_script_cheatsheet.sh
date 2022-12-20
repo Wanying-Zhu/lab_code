@@ -70,3 +70,9 @@ greet() {
 	echo "First parameter $1, second parameter $2"
 }
 greet hello world
+
+# Use while..do..done bash loop to read file line by line
+# https://www.cyberciti.biz/faq/unix-howto-read-line-by-line-from-file/
+# 1. -r: prevents backslash escapes from being interpreted
+# 2. Add IFS= option before read command to prevent leading/trailing whitespace from being trimmed.
+while read -r line; do COMMAND; done < input.file
